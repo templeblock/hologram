@@ -11,7 +11,7 @@
 		<script type="text/javascript">
 			if ( window.innerWidth === 0 ) { window.innerWidth = parent.innerWidth; window.innerHeight = parent.innerHeight; }
 		function main() {
-			var zoneSize = 7,
+			var zoneSize = 4,
 			videoElement = document.getElementById('videoOut'),
 			videoWidth = videoElement.videoWidth,
 			videoHeight = videoElement.videoHeight;
@@ -25,14 +25,14 @@
 			var scene = new THREE.Scene();
 			camera = new THREE.PerspectiveCamera( 95, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-			renderer = new THREE.WebGLRenderer();
-			hydrogen_spectrum = [0xFFF200, 0x01E7E1, 0xEA3556, 0x01E7E1, 0x134FDC];
+			renderer = new THREE.WebGLRenderer({antialias: true});
+			hydrogen_spectrum = [0xEA3556, 0x01E7E1, 0xFF3E90, 0x01E7E1, 0x134FDC];
 			h_mats = [];
 			for (var i = 0; i < hydrogen_spectrum.length; i++) {
-				h_mats.push(new THREE.PointCloudMaterial({color: hydrogen_spectrum[i], size: 2, transparent: true}))
+				h_mats.push(new THREE.PointCloudMaterial({color: hydrogen_spectrum[i], size: 1, transparent: true}))
 			}
 
-			camera.position.z = 600;
+			camera.position.z = 450;
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
 		
@@ -102,21 +102,21 @@
 					sceneCtx.moveTo(zone.x,zone.y);
 					sceneCtx.lineTo((zone.x - energy_field[zone.y][zone.x][0]), (zone.y + energy_field[zone.y][zone.x][1]));
 					sceneCtx.stroke();
-					energy_field[zone.y][zone.x][0] *= .95;
-					energy_field[zone.y][zone.x][1] *= .95;
-					mag_field[zone.y][zone.x] *= .95;
-					if (mag > 50) {
+					energy_field[zone.y][zone.x][0] *= .925;
+					energy_field[zone.y][zone.x][1] *= .925;
+					mag_field[zone.y][zone.x] *= .925;
+					if (mag > 100) {
 						ind = 0;
-						if (mag < 100) {
-							ind = 1;
-						}
-						else if (mag < 150) {
+						if (mag < 120) {
 							ind = 2;
 						}
-						else if (mag < 300) {
+						else if (mag < 150) {
 							ind = 3;
 						}
-						else if (mag >= 600) {
+						else if (mag < 300) {
+							ind = 1;
+						}
+						else if (mag >= 300) {
 							ind = 4;
 						}
 						vertex = new THREE.Vector3();

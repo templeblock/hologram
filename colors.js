@@ -1,7 +1,7 @@
 /*jslint sloppy: true, white: true */
 var toDegree = 180 / Math.PI;
 function fromArgb(a, r, g, b) {
-    return 'rgba(' + [r, g, b, a/255].join(',') + ')';
+    return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + a/255 + ')';
 }
 function convertHsvToRgb(h, s, v) {
     var a, b, c, d, hueFloor;
