@@ -5,7 +5,7 @@
 			display: none;
 		}
 		body {
-			background: black;
+			background: #161616;
 			width: 100%;
 			position: absolute;
 		}
@@ -24,7 +24,7 @@
 		}
 		canvas {
 			position: relative;
-			-webkit-filter:  contrast(.8) brightness(.85) blur(1px);
+			-webkit-filter:  contrast(.8) brightness(.85) blur(.5px);
 		}
 		</style>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -40,7 +40,7 @@
 		<script type="text/javascript">
 			if ( window.innerWidth === 0 ) { window.innerWidth = parent.innerWidth; window.innerHeight = parent.innerHeight; }
 		function main() {
-			var zoneSize = 4,
+			var zoneSize = 3,
 			videoElement = document.getElementById('videoOut'),
 			videoWidth = videoElement.videoWidth,
 			videoHeight = videoElement.videoHeight;
@@ -80,7 +80,7 @@
 			// create the particles
 			geometries =  [new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry()];
 			tot = [0,0,0];
-			k = .965;
+			k = .97;
 
 			webCamFlow.onCalculated(function(direction) {
 				//tot = [0,0,0];
@@ -111,13 +111,13 @@
 						if (mag < 100) {
 							ind = 1;
 						}
-						else if (mag < 120) {
+						else if (mag < 150) {
 							ind = 2;
 						}
-						else if (mag < 150) {
+						else if (mag < 200) {
 							ind = 3;
 						}
-						else if (mag >= 150) {
+						else if (mag >= 250) {
 							ind = 4;
 						}
 						vertex = new THREE.Vector3();
@@ -142,7 +142,7 @@
 
 			t = 0;
 			//controls = new THREE.OrbitControls(camera, renderer.domElement);
-			MAX_AGE = 8.0;
+			MAX_AGE = 18.0;
 			function render() {
 
 			//headtrackr.controllers.three.realisticAbsoluteCameraControl(camera, 10, [320,240, 450], new THREE.Vector3(320, 240, 0), {damping : 0.5});
@@ -155,19 +155,20 @@
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 				
-				camera.position.x = 320 + 0.00005 * tot[0];
-				camera.position.y = 240 + 0.00005 * tot[1];
+				camera.position.x = 320 + 0.0001 * tot[0];
+				camera.position.y = 240 + 0.0001 * tot[1];
 				camera.position.z = 400 + 10 * (Math.log(tot[2]));
 
-				camera.rotation.x = .000001 * tot[0];
-				camera.rotation.y = .000001 * tot[1];
-				camera.rotation.z = Math.PI;
+				camera.rotation.x = .000001 * tot[0] + Math.PI;
+				camera.rotation.y = .000001 * tot[1] + Math.PI;
+				//camera.rotation.z = Math.PI;
+
 
 				for (var i = 0; i < scene.children.length; i++) {
 					object = scene.children[i];
 					if (object instanceof THREE.PointCloud) {
-						if (object.age++ > MAX_AGE) scene.remove(object);
-						object.material.opacity = 1 - object.age / MAX_AGE;// * //Math.cos(object.age++/MAX_AGE * Math.PI);
+						if (object.age > MAX_AGE) scene.remove(object);
+						object.material.opacity = 1 - object.age++ / MAX_AGE;// * //Math.cos(object.age++/MAX_AGE * Math.PI);
 					}
 					//else if (object.geometry instanceof THREE.PlaneGeometry) {
 					//	object.position = new THREE.Vector3(maxRect.x, maxRect.y, 0);
@@ -186,8 +187,8 @@
 			<canvas id="scene" width="640px" height="480px"></canvas>
 			<br>
 		</div>
-		<h1>hologram</h1>
-		<!-- <footer>built using oflow.js</footer> -->
+<!-- 		<h1>hologram</h1>
+ -->		<!-- <footer>built using oflow.js</footer> -->
 
 	</body>
 </html>
