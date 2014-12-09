@@ -1,13 +1,42 @@
 <html>
 	<head>
+		<style>
+		div {
+			display: none;
+		}
+		body {
+			background: black;
+			width: 100%;
+			position: absolute;
+		}
+		h1 {
+			text-align: center;
+			margin-right: auto;
+			margin-left: auto;
+			top: 100px;
+			left: 45%;
+			position: absolute;
+			color: rgba(255, 255, 255, .25);
+			z-index: 10;
+			font-family: 'Roboto', sans-serif;
+			font-weight: 100;
+			font-size: 3em;
+		}
+		canvas {
+			position: relative;
+			-webkit-filter:  contrast(.8) brightness(.85) blur(1px);
+		}
+		</style>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>halide</title>
+		<title>hologram</title>
+		<link href='http://fonts.googleapis.com/css?family=Roboto:400,100' rel='stylesheet' type='text/css'>
 		<script type="text/javascript" src="./oflow.js"></script>
 		<script type="text/javascript" src="./colors.js"></script>
 		<script type="text/javascript" src="./bower_components/three.js/three.js"></script>
 		<script type="text/javascript" src="./OrbitControls.js"></script>
 		<script type="text/javascript" src="./bower_components/tracking.js/build/tracking.js"></script>
 		<script type="text/javascript" src="./bower_components/tracking.js/build/data/face-min.js"></script>
+		<script type="text/javascript" src="./headtrackr.js"></script>
 		<script type="text/javascript">
 			if ( window.innerWidth === 0 ) { window.innerWidth = parent.innerWidth; window.innerHeight = parent.innerHeight; }
 		function main() {
@@ -26,15 +55,15 @@
 			camera = new THREE.PerspectiveCamera( 95, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
 			renderer = new THREE.WebGLRenderer({antialias: true});
-			hydrogen_spectrum = [0xEA3556, 0x01E7E1, 0xFF3E90, 0x01E7E1, 0x134FDC];
+			hydrogen_spectrum = [0x2EFAEE, 0x567794, 0x01E7E1, 0xFBED7E, 0xC71911];
 			h_mats = [];
 			for (var i = 0; i < hydrogen_spectrum.length; i++) {
-				h_mats.push(new THREE.PointCloudMaterial({color: hydrogen_spectrum[i], size: 1, transparent: true}))
+				h_mats.push(new THREE.PointCloudMaterial({color: hydrogen_spectrum[i], size: 4 - 5 / (i + 1), transparent: true}))
 			}
 
-			camera.position.z = 450;
+			camera.position.z = 550;
 			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
+			x = document.body.appendChild( renderer.domElement );
 		
 			mag_field = [];
 			for (var row = 0; row < 480; ++row) {
@@ -46,86 +75,58 @@
 				}
 			}
 
-			
-			var faceX = 0;
-			var faceY = 0;				
-			plane = new THREE.Mesh(new THREE.PlaneGeometry(0, 0), new THREE.MeshNormalMaterial());
-			var maxRect = {};
-			rectCenterX = 240;
-			rectCenterY = 320;
 			pMat = new 	THREE.MeshNormalMaterial();
-			tracker = new tracking.ObjectTracker('face');
-			tracker.setInitialScale(4);
-			tracker.setStepSize(2);
-			trackerTask = tracking.track('#videoOut', tracker);
-			tracker.on('track', function(event) {
-			  maxRectArea = 0;
-			  event.data.forEach(function(rect) {
-			  	maxRect.x = 0;
-			  	maxRect.y = 0;
-			    if (rect.width * rect.height > maxRectArea){
-			      maxRectArea = rect.width * rect.height;
-			      maxRect = rect;
-			      rectCenterX = maxRect.x + (maxRect.width/2);
-			      rectCenterY = maxRect.y + (maxRect.height/2);
-			    }
-			  });
-			  if(maxRectArea > 0) {
-			    rectCenterX = maxRect.x + (maxRect.width/2);
-			    rectCenterY = maxRect.y + (maxRect.height/2);
-			    faceX = (rectCenterX - 160) * (window.innerWidth/320) * 50;
-			    faceY = (rectCenterY - 120) * (window.innerHeight/240) * 50;
-			  }
-			});
-			scene.add(plane);
 			vertex = 0;
 			// create the particles
 			geometries =  [new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry()];
 			tot = [0,0,0];
+			k = .965;
+
 			webCamFlow.onCalculated(function(direction) {
 				//tot = [0,0,0];
-				tot[2] = tot[2] / 2;
-				trackerTask.stop();
+				tot[1] *= k;
+				tot[0] *= k;
+				tot[2] *= k;
 				// render zones
-				sceneCtx.clearRect(0, 0, sceneWidth, sceneHeight);
+				//sceneCtx.clearRect(0, 0, sceneWidth, sceneHeight);
 				for (var i = 0; i < direction.zones.length; ++i) {
 					var zone = direction.zones[i];
 					energy_field[zone.y][zone.x][0] += zone.u;
 					energy_field[zone.y][zone.x][1] += zone.v;
-					mag = (energy_field[zone.y][zone.x][0] * energy_field[zone.y][zone.x][0] + energy_field[zone.y][zone.x][1] * energy_field[zone.y][zone.x][1]) ;
+					mag = (energy_field[zone.y][zone.x][0] * energy_field[zone.y][zone.x][0] + energy_field[zone.y][zone.x][1] * energy_field[zone.y][zone.x][1]) - 1;
 					mag_field[zone.y][zone.x] += mag;
 					tot[0] += zone.u;
 					tot[1] += zone.v;
 					tot[2] += mag;
-					sceneCtx.strokeStyle = getColor(zone.u, zone.v);
-					sceneCtx.beginPath();
-					sceneCtx.moveTo(zone.x,zone.y);
-					sceneCtx.lineTo((zone.x - energy_field[zone.y][zone.x][0]), (zone.y + energy_field[zone.y][zone.x][1]));
-					sceneCtx.stroke();
-					energy_field[zone.y][zone.x][0] *= .925;
-					energy_field[zone.y][zone.x][1] *= .925;
-					mag_field[zone.y][zone.x] *= .925;
-					if (mag > 100) {
+					//sceneCtx.strokeStyle = getColor(zone.u, zone.v);
+					//sceneCtx.beginPath();
+					//sceneCtx.moveTo(zone.x,zone.y);
+					//sceneCtx.lineTo((zone.x - energy_field[zone.y][zone.x][0]), (zone.y + energy_field[zone.y][zone.x][1]));
+					//sceneCtx.stroke();
+					energy_field[zone.y][zone.x][0] *= k;
+					energy_field[zone.y][zone.x][1] *= k;
+					mag_field[zone.y][zone.x] *= k;
+					if (mag > 50) {
 						ind = 0;
-						if (mag < 120) {
+						if (mag < 100) {
+							ind = 1;
+						}
+						else if (mag < 120) {
 							ind = 2;
 						}
 						else if (mag < 150) {
 							ind = 3;
 						}
-						else if (mag < 300) {
-							ind = 1;
-						}
-						else if (mag >= 300) {
+						else if (mag >= 150) {
 							ind = 4;
 						}
 						vertex = new THREE.Vector3();
 						vertex.v_z = mag;
-						vertex.v_x = energy_field[zone.y][zone.x][0] * .1;
-						vertex.v_y = energy_field[zone.y][zone.x][1] * .1;
+						vertex.v_x = energy_field[zone.y][zone.x][0]  * .2;
+						vertex.v_y = energy_field[zone.y][zone.x][1]  * .2;
 						vertex.x = zone.x + vertex.v_x;
 						vertex.y = zone.y + vertex.v_y;
-						vertex.z = 15 * Math.log(mag);
+						vertex.z = 19 * Math.log(mag);
 						geometries[ind].vertices.push(vertex);
 					}
 				}
@@ -136,51 +137,57 @@
 					scene.add(particles);
 				}
 				geometries = [new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry()];
-				//trackerTask.run();
+				
 			});
 
 			t = 0;
 			//controls = new THREE.OrbitControls(camera, renderer.domElement);
-			MAX_AGE = 5;
+			MAX_AGE = 8.0;
 			function render() {
+
+			//headtrackr.controllers.three.realisticAbsoluteCameraControl(camera, 10, [320,240, 450], new THREE.Vector3(320, 240, 0), {damping : 0.5});
+			//console.log(camera.position)
 				requestAnimationFrame( render );
 				renderer.render(scene, camera);
 				t += .01;
-				//camera.rotation.z = Math.atan2(camera.position.x, camera.position.y);
-				camera.fov = 120
-				camera.fov -= 3 * Math.log(tot[2]);
+				camera.fov = 100
+				camera.fov -= 2.5 * Math.log(tot[2]);
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
-				camera.position.x = 320 + 0.0002 * tot[0];
-				camera.position.y = 240 + 0.0002 * tot[1];
+				
+				camera.position.x = 320 + 0.00005 * tot[0];
+				camera.position.y = 240 + 0.00005 * tot[1];
+				camera.position.z = 400 + 10 * (Math.log(tot[2]));
+
+				camera.rotation.x = .000001 * tot[0];
+				camera.rotation.y = .000001 * tot[1];
 				camera.rotation.z = Math.PI;
-				camera.rotation.x = tot[0] * 0.000001;
-				camera.rotation.y = tot[1] * 0.000001;
-				//camera.position.z = 500 + 0.00005 * tot[2]
-				//camera.lookAt(vertex);
+
 				for (var i = 0; i < scene.children.length; i++) {
 					object = scene.children[i];
 					if (object instanceof THREE.PointCloud) {
-						if (object.age > MAX_AGE) scene.remove(object);
-						object.material.opacity = Math.cos(object.age++/MAX_AGE * Math.PI);
+						if (object.age++ > MAX_AGE) scene.remove(object);
+						object.material.opacity = 1 - object.age / MAX_AGE;// * //Math.cos(object.age++/MAX_AGE * Math.PI);
 					}
-					else if (object.geometry instanceof THREE.PlaneGeometry) {
-						object.position = new THREE.Vector3(maxRect.x, maxRect.y, 0);
-					}
+					//else if (object.geometry instanceof THREE.PlaneGeometry) {
+					//	object.position = new THREE.Vector3(maxRect.x, maxRect.y, 0);
+					//}
 				}
 			}
 			render();
 			webCamFlow.startCapture();
-
+			//trackerTask.stop();
 		};
 		</script>
 	</head>
 	<body onload="main()">
 		<div style="float:left">
-		<video id="videoOut" width="640px" height="480px" autoplay></video>
-		<br>
-	</div>
-	<canvas id="scene" width="640px" height="480px"></canvas>
-<footer>built using oflow.js</footer>
-</body>
+			<video id="videoOut" width="640px" height="480px" autoplay></video>
+			<canvas id="scene" width="640px" height="480px"></canvas>
+			<br>
+		</div>
+		<h1>hologram</h1>
+		<!-- <footer>built using oflow.js</footer> -->
+
+	</body>
 </html>
