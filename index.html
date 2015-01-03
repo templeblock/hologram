@@ -8,6 +8,8 @@
 			background: #161616;
 			width: 100%;
 			position: absolute;
+			padding: 0;
+			margin: 0;
 		}
 		h1 {
 			text-align: center;
@@ -24,7 +26,7 @@
 		}
 		canvas {
 			position: relative;
-			-webkit-filter:  contrast(.8) brightness(.85) blur(.5px);
+			-webkit-filter:  contrast(2) brightness(1.5) blur(.5px);
 		}
 		</style>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -40,7 +42,7 @@
 		<script type="text/javascript">
 			if ( window.innerWidth === 0 ) { window.innerWidth = parent.innerWidth; window.innerHeight = parent.innerHeight; }
 		function main() {
-			var zoneSize = 3,
+			var zoneSize = 8,
 			videoElement = document.getElementById('videoOut'),
 			videoWidth = videoElement.videoWidth,
 			videoHeight = videoElement.videoHeight;
@@ -58,7 +60,7 @@
 			hydrogen_spectrum = [0x2EFAEE, 0x567794, 0x01E7E1, 0xFBED7E, 0xC71911];
 			h_mats = [];
 			for (var i = 0; i < hydrogen_spectrum.length; i++) {
-				h_mats.push(new THREE.PointCloudMaterial({color: hydrogen_spectrum[i], size: 4 - 5 / (i + 1), transparent: true}))
+				h_mats.push(new THREE.PointCloudMaterial({color: hydrogen_spectrum[i], size: 2, transparent: true}))
 			}
 
 			camera.position.z = 550;
@@ -80,8 +82,7 @@
 			// create the particles
 			geometries =  [new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry(),new THREE.Geometry()];
 			tot = [0,0,0];
-			k = .97;
-
+			k = .95;
 			webCamFlow.onCalculated(function(direction) {
 				//tot = [0,0,0];
 				tot[1] *= k;
@@ -100,7 +101,7 @@
 					tot[2] += mag;
 					//sceneCtx.strokeStyle = getColor(zone.u, zone.v);
 					//sceneCtx.beginPath();
-					//sceneCtx.moveTo(zone.x,zone.y);
+					//sceneCtx.moveTo(zone.x, zone.y);
 					//sceneCtx.lineTo((zone.x - energy_field[zone.y][zone.x][0]), (zone.y + energy_field[zone.y][zone.x][1]));
 					//sceneCtx.stroke();
 					energy_field[zone.y][zone.x][0] *= k;
@@ -122,11 +123,11 @@
 						}
 						vertex = new THREE.Vector3();
 						vertex.v_z = mag;
-						vertex.v_x = energy_field[zone.y][zone.x][0]  * .2;
-						vertex.v_y = energy_field[zone.y][zone.x][1]  * .2;
+						vertex.v_x = energy_field[zone.y][zone.x][0]  * .25;
+						vertex.v_y = energy_field[zone.y][zone.x][1]  * .25;
 						vertex.x = zone.x + vertex.v_x;
 						vertex.y = zone.y + vertex.v_y;
-						vertex.z = 19 * Math.log(mag);
+						vertex.z = 20 * Math.log(mag);
 						geometries[ind].vertices.push(vertex);
 					}
 				}
@@ -142,7 +143,7 @@
 
 			t = 0;
 			//controls = new THREE.OrbitControls(camera, renderer.domElement);
-			MAX_AGE = 18.0;
+			MAX_AGE = 8.0;
 			function render() {
 
 			//headtrackr.controllers.three.realisticAbsoluteCameraControl(camera, 10, [320,240, 450], new THREE.Vector3(320, 240, 0), {damping : 0.5});
@@ -150,14 +151,15 @@
 				requestAnimationFrame( render );
 				renderer.render(scene, camera);
 				t += .01;
-				camera.fov = 100
-				camera.fov -= 2.5 * Math.log(tot[2]);
+                                lt2 = Math.log(tot[2]);
+				camera.fov = 110
+				camera.fov -= 3 * lt2;
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 				
 				camera.position.x = 320 + 0.0001 * tot[0];
 				camera.position.y = 240 + 0.0001 * tot[1];
-				camera.position.z = 400 + 10 * (Math.log(tot[2]));
+				camera.position.z = 400 + 10 * (lt2);
 
 				camera.rotation.x = .000001 * tot[0] + Math.PI;
 				camera.rotation.y = .000001 * tot[1] + Math.PI;
